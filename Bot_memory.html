@@ -1,0 +1,59 @@
+# 👀
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Bot</title>
+  <style>
+    .container {
+      width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Chat Bot</h1>
+    <div id="chatLog"></div>
+    <input type="text" id="userInput" placeholder="Enter your message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById("chatLog");
+    const userInput = document.getElementById("userInput");
+
+    function displayMessage(message, isUser) {
+      const className = isUser ? "user" : "bot";
+      const messageElement = document.createElement("p");
+      messageElement.className = className;
+      messageElement.innerText = message;
+      chatLog.appendChild(messageElement);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function sendMessage() {
+      const message = userInput.value.trim();
+      if (message !== "") {
+        displayMessage("You: " + message, true);
+        userInput.value = "";
+
+        // Call your bot model and get the response
+        const response = callYourBotModel(message);
+
+        displayMessage("Bot: " + response, false);
+      }
+    }
+
+    function callYourBotModel(message) {
+      // Add your logic to call the bot model and get the response
+      // Replace the following line with your actual code
+      return "This is the bot's response.";
+    }
+  </script>
+</body>
+</html>
