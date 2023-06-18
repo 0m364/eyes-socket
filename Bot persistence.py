@@ -1,7 +1,7 @@
 ######################
-# bot-persistence_0.1             #
-#                👀                            #
-#####################
+# bot-persistence_0.1#
+#          👀        #
+######################
 
 import os
 import subprocess
