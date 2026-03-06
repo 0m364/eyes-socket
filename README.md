@@ -107,6 +107,25 @@ javac ChatBot.java
 java ChatBot "python3 mock_bot.py" "history.txt"
 ```
 
+### Usage as an MCP Server
+
+`eyes-socket` can now be used as an MCP (Model Context Protocol) server to integrate with agentic frameworks.
+
+1. Install with MCP dependencies:
+   ```bash
+   pip install "eyes-socket[mcp]"
+   ```
+
+2. Run the MCP server:
+   ```bash
+   eyes-socket-mcp
+   ```
+
+   The server provides the `chat_with_bot` tool which takes:
+   - `user_input` (required): The message to send to the bot.
+   - `model_cmd` (optional): Command to run the bot model executable (default: `python3 mock_bot.py`).
+   - `history_file` (optional): Path to the chat history file (default: `chat_history.txt`).
+
 ## License
 
 See `MITLicense.txt`.

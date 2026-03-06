@@ -1,2 +1,0 @@
-[console_scripts]
-eyes-socket = eyes_socket.cli:main
