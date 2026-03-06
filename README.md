@@ -1,18 +1,35 @@
-# Bot Persistence
+# Bot Persistence (eyes-socket)
 
-This repository contains tools to add persistent memory (chat history) to local bot models. It provides implementations in Python, C++, and Java, along with a simple HTML frontend mock.
+This repository contains tools to add persistent memory (chat history) to local bot models. It provides implementations in Python (`eyes-socket`), C++, and Java, along with a simple HTML frontend mock.
 
 ## Overview
 
 The core idea is to maintain a chat history file and feed the recent history as context to the bot model on each interaction. This allows for a continuous conversation.
 
-## Implementations
+## `eyes-socket` (Python Implementation)
 
-### Python (`bot_persistence.py`)
+The most robust and recommended implementation, now available as a Python package.
 
-The most robust and recommended implementation.
+### Installation
 
-**Usage:**
+You can install `eyes-socket` from source:
+
+```bash
+pip install .
+```
+
+(Or, if uploaded to PyPI, simply `pip install eyes-socket`)
+
+### Usage via CLI
+
+Once installed, you can use the `eyes-socket` command globally:
+
+```bash
+eyes-socket --model "./path/to/your/model" --history "chat_history.txt"
+```
+
+Or you can continue using the wrapper script for backwards compatibility:
+
 ```bash
 python3 bot_persistence.py --model "./path/to/your/model" --history "chat_history.txt"
 ```
@@ -20,6 +37,20 @@ python3 bot_persistence.py --model "./path/to/your/model" --history "chat_histor
 **Options:**
 - `--model`: Command to run the bot model executable (default: `./your-bot-model/chat`).
 - `--history`: Path to the chat history file (default: `chat_history.txt`).
+
+### Usage as a Python API
+
+You can also use `eyes-socket` in your own Python scripts:
+
+```python
+from eyes_socket import EyesSocket
+
+socket = EyesSocket(model_cmd="python3 mock_bot.py", history_file="my_history.txt")
+response = socket.chat("Hello!")
+print(response)
+```
+
+## Other Implementations
 
 ### C++ (`bot_persistence.cpp`)
 
@@ -59,6 +90,8 @@ A `mock_bot.py` script is included for testing purposes. It simply echoes back t
 
 **To test the Python implementation:**
 ```bash
+eyes-socket --model "python3 mock_bot.py"
+# or
 python3 bot_persistence.py --model "python3 mock_bot.py"
 ```
 
