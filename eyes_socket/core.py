@@ -1,10 +1,13 @@
 import os
-import shlex
-import subprocess
+from .plugins import create_model
 
 class EyesSocket:
-    def __init__(self, model_cmd, history_file="chat_history.txt"):
-        self.model_cmd = model_cmd
+    def __init__(self, model_cmds, history_file="chat_history.txt"):
+        # Support both single string (for backwards compatibility) and lists
+        if isinstance(model_cmds, str):
+            model_cmds = [model_cmds]
+
+        self.models = [create_model(cmd) for cmd in model_cmds]
         self.history_file = history_file
         self.chat_history = self.load_chat_history()
 
@@ -30,52 +33,36 @@ class EyesSocket:
     def add_user_input(self, text):
         self.chat_history.append("You: " + text)
 
-    def add_bot_response(self, text):
-        self.chat_history.append("Bot: " + text)
-
-    def call_bot_model(self, prompt):
-        """Calls the bot model executable with the prompt."""
-        try:
-            # Split command into a list properly handling quoted arguments
-            if " " in self.model_cmd:
-                command = shlex.split(self.model_cmd)
-            else:
-                command = [self.model_cmd]
-
-            command.append(prompt)
-
-            response = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            return response.stdout.strip()
-        except subprocess.CalledProcessError as e:
-            print(f"Error calling bot model: {e}")
-            print(f"Stderr: {e.stderr}")
-            return None
-        except FileNotFoundError:
-            print(f"Error: Executable not found in command '{self.model_cmd}'")
-            return None
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return None
+    def add_bot_response(self, text, model_name="Bot"):
+        self.chat_history.append(f"{model_name}: {text}")
 
     def get_context(self, max_lines=1000):
         return "\n".join(self.chat_history[-max_lines:])
 
-    def chat(self, user_input):
+    def chat(self, user_input, rounds=1):
         if not user_input.strip():
             return None
 
         self.add_user_input(user_input)
-        prompt = self.get_context()
-        ai_response = self.call_bot_model(prompt)
+        responses = []
 
-        if ai_response:
-            self.add_bot_response(ai_response)
-            self.save_chat_history()
-            return ai_response
+        for _ in range(rounds):
+            for model in self.models:
+                prompt = self.get_context()
+                ai_response = model.call(prompt)
+
+                if ai_response:
+                    model_name = "Bot" if len(self.models) == 1 else f"Bot ({model.uri})"
+                    self.add_bot_response(ai_response, model_name=model_name)
+                    responses.append((model_name, ai_response))
+                else:
+                    responses.append((model.uri, "[No response or error]"))
+
+        self.save_chat_history()
+
+        if len(self.models) == 1 and rounds == 1:
+             # Backward compatibility: return single string
+             return responses[0][1] if responses else None
         else:
-            return None
+             # New behavior: return list of (model_name, response) tuples
+             return responses
