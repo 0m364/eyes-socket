@@ -23,7 +23,7 @@ async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="chat_with_bot",
-            description="Send a message to the bot model with persistent history.",
+            description="Send a message to the bot model with persistent history. Can specify multiple models and rounds for chaining.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -31,9 +31,19 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "string",
                         "description": "The message to send to the bot."
                     },
+                    "model_cmds": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Commands to run the bot model executables, API URLs, or browser: URLs. Default: ['python3 mock_bot.py']"
+                    },
                     "model_cmd": {
                         "type": "string",
-                        "description": "Command to run the bot model executable (default: 'python3 mock_bot.py')",
+                        "description": "Fallback command to run the bot model executable (for backwards compatibility).",
+                    },
+                    "rounds": {
+                        "type": "integer",
+                        "description": "Number of conversational rounds if chaining multiple models.",
+                        "default": 1
                     },
                     "history_file": {
                         "type": "string",
@@ -57,17 +67,37 @@ async def handle_call_tool(
         raise ValueError("Missing required argument 'user_input'")
 
     user_input = arguments["user_input"]
-    model_cmd = arguments.get("model_cmd", "python3 mock_bot.py")
+
+    # Handle single string fallback for model_cmds parameter if requested via old spec (or mcp default)
+    if "model_cmds" in arguments:
+        model_cmds = arguments["model_cmds"]
+    elif "model_cmd" in arguments:
+        model_cmds = [arguments["model_cmd"]]
+    else:
+        model_cmds = ["python3 mock_bot.py"]
+
+    if isinstance(model_cmds, str):
+        model_cmds = [model_cmds]
+
+    rounds = arguments.get("rounds", 1)
     history_file = arguments.get("history_file", "chat_history.txt")
 
     try:
-        socket = EyesSocket(model_cmd=model_cmd, history_file=history_file)
-        ai_response = socket.chat(user_input)
+        socket = EyesSocket(model_cmds=model_cmds, history_file=history_file)
+        ai_responses = socket.chat(user_input, rounds=rounds)
 
-        if ai_response:
-            return [types.TextContent(type="text", text=ai_response)]
+        output_text = ""
+        if isinstance(ai_responses, list):
+             for model_name, response in ai_responses:
+                 output_text += f"{model_name}: {response}\n"
+             if not output_text:
+                 output_text = "Bot: [No response or error]"
+        elif ai_responses:
+             output_text = f"Bot: {ai_responses}"
         else:
-            return [types.TextContent(type="text", text="Bot: [No response or error]")]
+             output_text = "Bot: [No response or error]"
+
+        return [types.TextContent(type="text", text=output_text.strip())]
 
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
