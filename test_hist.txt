@@ -1,0 +1,14 @@
+You: Hello
+Bot: Mock Response: You said 'You: Hello'
+You: Hi
+Bot: Mock Response: You said 'You: Hello
+Bot: Mock Response: You said 'You: Hello'
+You: Hi'
+You: Test Input
+Bot: Mock Response: You said 'You: Hello
+Bot: Mock Response: You said 'You: Hello'
+You: Hi
+Bot: Mock Response: You said 'You: Hello
+Bot: Mock Response: You said 'You: Hello'
+You: Hi'
+You: Test Input'
